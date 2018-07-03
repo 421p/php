@@ -5,7 +5,7 @@ before_install:
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
   - docker pull resin/rpi-raspbian:stretch
 script:
-  - docker build 7.2/stretch/cli -t sshaddicts/rpi-php:cli - 7.2/stretch/cli/Dockerfile
+  - cd 7.2/stretch/cli && docker build . -t sshaddicts/rpi-php:cli
 notifications:
   webhooks: https://fathomless-fjord-24024.herokuapp.com/notify
 deploy:
