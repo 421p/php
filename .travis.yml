@@ -1,71 +1,19 @@
-language: bash
-services: docker
-
-env:
-  - VERSION=7.2 VARIANT=stretch/cli
-  - VERSION=7.2 VARIANT=stretch/apache
-  - VERSION=7.2 VARIANT=stretch/fpm
-  - VERSION=7.2 VARIANT=stretch/zts
-  - VERSION=7.2 VARIANT=alpine3.7/cli
-  - VERSION=7.2 VARIANT=alpine3.7/fpm
-  - VERSION=7.2 VARIANT=alpine3.7/zts
-  - VERSION=7.2 VARIANT=alpine3.6/cli
-  - VERSION=7.2 VARIANT=alpine3.6/fpm
-  - VERSION=7.2 VARIANT=alpine3.6/zts
-  - VERSION=7.1 VARIANT=stretch/cli
-  - VERSION=7.1 VARIANT=stretch/apache
-  - VERSION=7.1 VARIANT=stretch/fpm
-  - VERSION=7.1 VARIANT=stretch/zts
-  - VERSION=7.1 VARIANT=jessie/cli
-  - VERSION=7.1 VARIANT=jessie/apache
-  - VERSION=7.1 VARIANT=jessie/fpm
-  - VERSION=7.1 VARIANT=jessie/zts
-  - VERSION=7.1 VARIANT=alpine3.7/cli
-  - VERSION=7.1 VARIANT=alpine3.7/fpm
-  - VERSION=7.1 VARIANT=alpine3.7/zts
-  - VERSION=7.0 VARIANT=stretch/cli
-  - VERSION=7.0 VARIANT=stretch/apache
-  - VERSION=7.0 VARIANT=stretch/fpm
-  - VERSION=7.0 VARIANT=stretch/zts
-  - VERSION=7.0 VARIANT=jessie/cli
-  - VERSION=7.0 VARIANT=jessie/apache
-  - VERSION=7.0 VARIANT=jessie/fpm
-  - VERSION=7.0 VARIANT=jessie/zts
-  - VERSION=7.0 VARIANT=alpine3.7/cli
-  - VERSION=7.0 VARIANT=alpine3.7/fpm
-  - VERSION=7.0 VARIANT=alpine3.7/zts
-  - VERSION=5.6 VARIANT=stretch/cli
-  - VERSION=5.6 VARIANT=stretch/apache
-  - VERSION=5.6 VARIANT=stretch/fpm
-  - VERSION=5.6 VARIANT=stretch/zts
-  - VERSION=5.6 VARIANT=jessie/cli
-  - VERSION=5.6 VARIANT=jessie/apache
-  - VERSION=5.6 VARIANT=jessie/fpm
-  - VERSION=5.6 VARIANT=jessie/zts
-  - VERSION=5.6 VARIANT=alpine3.7/cli
-  - VERSION=5.6 VARIANT=alpine3.7/fpm
-  - VERSION=5.6 VARIANT=alpine3.7/zts
-
-install:
-  - git clone https://github.com/docker-library/official-images.git ~/official-images
-
-before_script:
-  - env | sort
-  - wget -qO- 'https://github.com/tianon/pgp-happy-eyeballs/raw/master/hack-my-builds.sh' | bash
-  - cd "$VERSION/$VARIANT"
-  - SUBVARIANT="${VARIANT#*/}"
-  - image="php:${VERSION}-${SUBVARIANT}-${VARIANT%/*}"
-
+sudo: required
+services:
+  - docker
+before_install:
+  - docker run --rm --privileged multiarch/qemu-user-static:register --reset
+  - docker pull resin/rpi-raspbian:stretch
 script:
-  - |
-    (
-      set -Eeuo pipefail
-      set -x
-      docker build -t "$image" .
-      ~/official-images/test/run.sh "$image"
-    )
-
-after_script:
-  - docker images
-
-# vim:set et ts=2 sw=2:
+  - docker build 7.2/stretch/cli -t sshaddicts/rpi-php:cli - 7.2/stretch/cli/Dockerfile
+notifications:
+  webhooks: https://fathomless-fjord-24024.herokuapp.com/notify
+deploy:
+  provider: script
+  script: docker login -u "$DOCKER_LOGIN" -p "$DOCKER_PASSWORD" && docker push sshaddicts/rpi-php:cli
+  on:
+    branch: master
+env:
+  global:
+  - secure: HB+3KBm01AAr3wScE3OUe7VAuB5gZYxTYocGVBVi/OunBm2Vn4fIJ8NyzgBtkZPM88hSMGAOxTs/6rT9cKqHctHcsC+gyQDkS3SsjBjwbGGqn8HPKXKLmCulBUfqhf1NG88hLQLjM91A1abzMTG3JT/0riKuh1L4Aumj74p6aSnIl36DKzReJV91LTW38nT74nVunob8Stpu8AU15R+XKfvMOjgEdct+wxjovqXrvxR3nHU8ZIp7XWnb3xaIMVU0hIMZu+dJfHiodNdTOa/OMoA40KtkLoKsd47VGLhI8d7ub0UOZFAib/vrxtFYU4cxDCrx87I/cGpNvuckvORAYG3rivCxaATE+eK2U5TRLf+MGStt5fDTQowkxxUA8clzBgkzpSyWUKqoprkKC8/VEQbfXN0AmC5yZnjFHptTxws1lYovSmuJdaUPB4cphO48OSxOF3Fr7d9bOP7MZyGg41ELwLdNhTr0HcdnkLkW7Yf8ROqJXK9KKvK06m9VeYLMPtc9OpXijkeO4P26Ftiw1UDqtpkRCCMDPyM+DLeVUmbMTevxgNrnAJwxGn5xZ7+qUYLfV7cGs2cdzJbs/OgRGtGvQNLy65IZCquBF1jrL3EEno2sA/5r5sAvJZa7Voq4lxSPFX3oeAsEyrOs/O8bZbdmVM2SLWuLhNpnpNT6iQw=
+  - secure: MVSxHkTT6GLggy49yv0ceTX3L6RmfcWBHkbwiqD5NXG3Koj9VO6B6hqN49am14DkSTGjxhmzXGUUHbAmnxHYfq1XDEhxLZ8tQD8N7pZofZWQsc5u3pWG3ETb8HVa18u3jaf+HOJlZ3k8/ao7zNSq0msXnWnHKReKDMdh6OoSuxv5hONB0lsJVaUWbAK5lzLzJDy8X5n+jajn37f6oI60chrWROlR8uyrAJ9vqSnXVNMPpAfUzPnYZfcAIGDbOFyDn8XNmM7V1+RL5m7L6bfQ4ExPnqsvPIfdyei0hRSgs4BHQl92gmnTmV4moo7Hv3euSGrB0dpX1naOnJ7NbpGtnhhDunIDP8vRxUAk8XOVTnS/G81ibroCdOmqtKOIWjHy9oyHfdnLGHCRhlNhfEf31xzajw8FE+9Q5owhNQVKjbUUoikHEaGfY501Usi4aOzCbXhZXmSct24RiywbVXMX8nFtR7TljdgpB5x7KZX9wjkI6/kzZrOzyxNWO+MqRJ3P2KJFQ7pt+9hPc2QhV0hBwqFMC0UyQzyo15gSVv2sCoCeQCbDGXxofjBJ0ufLosSnKnLYuurcrmpBJ75ve3EsrcFuneDyWKTaYd4VGfJ1IJSXe7SgKUjh2+1mxM/BiUdb9YmZaRmlgC6WA6WBNFy9+wubrKjoDKTD9da1O6M+LUc=
