@@ -4,7 +4,7 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
-FROM debian:stretch-slim
+FROM resin/rpi-raspbian:stretch
 
 # prevent Debian's PHP packages from being installed
 # https://github.com/docker-library/php/pull/542
